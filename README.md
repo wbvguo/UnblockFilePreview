@@ -21,23 +21,19 @@ This happens because Windows marks downloaded files with a "Mark of the Web" (MO
 
 ## Installation
 
-### Option 1: Download Release Executable
-
 **Requirements:**
 - Windows OS
-- .NET 8.0 Runtime (download from [Microsoft](https://dotnet.microsoft.com/download/dotnet/8.0) if not already installed)
+- .NET 8.0 SDK (download from [Microsoft](https://dotnet.microsoft.com/download/dotnet/8.0) if not already installed)
 
 
+
+### Option 1: Download Release Executable
 **Download and Run:**
-1. Download the latest release executable from the [Releases](https://github.com/yourusername/UnblockFilePreview/releases) page
+1. Download the latest release executable from the [Releases](https://github.com/wbvguo/UnblockFilePreview/releases) page
 2. Extract the files to a folder of your choice
 3. Run `UnblockFilePreview.exe` (no installation required)
 
 ### Option 2: Build from Source
-
-**Requirements:**
-- Windows OS
-- .NET 8.0 SDK (download from [Microsoft](https://dotnet.microsoft.com/download/dotnet/8.0))
 
 **Building:**
 
