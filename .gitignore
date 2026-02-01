@@ -69,6 +69,4 @@ TestResults/
 # ================================
 *.ps1.user
 
-
-logo_test*
-logo.psd
+logo*
