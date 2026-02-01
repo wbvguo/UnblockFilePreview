@@ -80,6 +80,8 @@ This happens because Windows marks downloaded files with a "Mark of the Web" (MO
    - Select one or more files from the list
    - Click "Unblock Selected" to remove the "Mark of the Web" flag from the selected files
    - The log area will show the results of the operation
+   
+   >Note: you may need to reopen Windows Explorer window to see the effects
 
 > **Safety note:** Only unblock files from sources you trust! This utility removes Windows security warnings, so use it responsibly.
 
