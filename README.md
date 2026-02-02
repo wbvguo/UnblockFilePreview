@@ -21,11 +21,7 @@ This happens because Windows marks downloaded files with a "Mark of the Web" (MO
 
 ## Installation
 
-**Requirements:**
-- Windows OS
-- .NET 8.0 SDK (download from [Microsoft](https://dotnet.microsoft.com/download/dotnet/8.0) if not already installed)
-
-
+This software currently only supports Windows OS.
 
 ### Option 1: Download Release Executable
 **Download and Run:**
@@ -34,6 +30,10 @@ This happens because Windows marks downloaded files with a "Mark of the Web" (MO
 3. Run `UnblockFilePreview.exe` (no installation required)
 
 ### Option 2: Build from Source
+
+**Requirements:**
+- .NET 8.0 SDK (download from [Microsoft](https://dotnet.microsoft.com/download/dotnet/8.0) if not already installed)
+
 
 **Building:**
 
