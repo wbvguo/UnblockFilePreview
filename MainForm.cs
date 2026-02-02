@@ -17,13 +17,14 @@ namespace UnblockFilePreview
         private Button btnSelectFolder = null!;
 
         private CheckBox chkRecurse = null!;
-        private CheckBox chkDryRun = null!;
         private CheckBox chkOfficeDocs = null!;
 
         private CheckedListBox clbExts = null!;
         private Button btnScan = null!;
+        private Button btnDryRun = null!;
         private Button btnUnblockSelected = null!;
 
+        private Label lblFiles = null!;
         private ListView lvFiles = null!;
         private TextBox txtLog = null!;
 
@@ -36,7 +37,11 @@ namespace UnblockFilePreview
             ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tif", ".tiff"
         };
 
-        private static readonly string[] officeExts = new[] { ".docx", ".xlsx", ".pptx" };
+        private static readonly string[] officeExts = new[] { 
+            ".doc", ".docx", ".docm",  // Word
+            ".xls", ".xlsx", ".xlsm", ".xlsb",  // Excel
+            ".ppt", ".pptx", ".pptm"   // PowerPoint
+        };
 
         // Layout constants (easy to tweak)
         private const int MarginX = 12;
@@ -104,18 +109,17 @@ namespace UnblockFilePreview
             // ---- Row 2: options ----
             int optionsTop = TopY + 40;
             chkRecurse = new CheckBox { Left = MarginX + 65, Top = optionsTop, Width = 160, Text = "Include subfolders", Checked = false };
-            chkDryRun = new CheckBox { Left = MarginX + 240, Top = optionsTop, Width = 220, Text = "Dry run (WhatIf)", Checked = true };
 
             chkOfficeDocs = new CheckBox
             {
-                Left = MarginX + 470,
+                Left = MarginX + 65 + 160 + 15,
                 Top = optionsTop,
-                Width = 420,
+                Width = 450,
                 Text = "Include Office documents (Word / Excel / PowerPoint)",
                 Checked = false
             };
             toolTip.SetToolTip(chkOfficeDocs,
-                "Adds .docx/.xlsx/.pptx to the allowed extension list.\r\n" +
+                "Adds Office document extensions (.doc/.docx, .xls/.xlsx, .ppt/.pptx, etc.) to the allowed list.\r\n" +
                 "Only enable this if you trust the file source.");
             chkOfficeDocs.CheckedChanged += (_, __) => SyncOfficeExtensionsToAllowedList();
 
@@ -159,10 +163,21 @@ namespace UnblockFilePreview
             };
             btnScan.Click += async (_, __) => await ScanAsync();
 
-            btnUnblockSelected = new Button
+            btnDryRun = new Button
             {
                 Left = MarginX,
                 Top = btnTop + 44,
+                Width = LeftColWidth,
+                Height = 34,
+                Text = "Dry run",
+                Enabled = false
+            };
+            btnDryRun.Click += async (_, __) => await DryRunSelectedAsync();
+
+            btnUnblockSelected = new Button
+            {
+                Left = MarginX,
+                Top = btnTop + 88,
                 Width = LeftColWidth,
                 Height = 34,
                 Text = "Unblock selected",
@@ -171,13 +186,23 @@ namespace UnblockFilePreview
             btnUnblockSelected.Click += async (_, __) => await UnblockSelectedAsync();
 
             toolTip.SetToolTip(btnScan, "Find files that still have Mark of the Web (Zone.Identifier).");
+            toolTip.SetToolTip(btnDryRun, "Preview what would be unblocked without making changes.");
             toolTip.SetToolTip(btnUnblockSelected, "Remove Mark of the Web for the checked files.");
 
             // Right: file list aligned to top of allowlist (top aligns with clbExts top)
             int rightLeft = MarginX + LeftColWidth + Gap;
             int rightWidth = ClientSize.Width - rightLeft - MarginX; // respect current window width
+            
+            lblFiles = new Label
+            {
+                Left = rightLeft,
+                Top = twoColTop,
+                Width = rightWidth,
+                Text = "Blocked files:"
+            };
+            
             int lvTop = clbTop; // ALIGN TOP with allowlist listbox
-            int lvHeight = (btnTop + 44 + 34) - lvTop; // roughly align bottom with buttons area
+            int lvHeight = (btnTop + 88 + 34) - lvTop; // roughly align bottom with buttons area
             // But we also want it to feel big, so give it a minimum height and let log take the rest.
             lvHeight = Math.Max(lvHeight, 430);
 
@@ -198,7 +223,9 @@ namespace UnblockFilePreview
 
             lvFiles.ItemChecked += (_, __) =>
             {
-                btnUnblockSelected.Enabled = lvFiles.CheckedItems.Count > 0;
+                bool hasSelection = lvFiles.CheckedItems.Count > 0;
+                btnDryRun.Enabled = hasSelection;
+                btnUnblockSelected.Enabled = hasSelection;
             };
 
             // Log at bottom, spanning full width
@@ -225,14 +252,15 @@ namespace UnblockFilePreview
             Controls.Add(btnSelectFolder);
 
             Controls.Add(chkRecurse);
-            Controls.Add(chkDryRun);
             Controls.Add(chkOfficeDocs);
 
             Controls.Add(lblExt);
             Controls.Add(clbExts);
             Controls.Add(btnScan);
+            Controls.Add(btnDryRun);
             Controls.Add(btnUnblockSelected);
 
+            Controls.Add(lblFiles);
             Controls.Add(lvFiles);
             Controls.Add(txtLog);
 
@@ -247,6 +275,9 @@ namespace UnblockFilePreview
             int rightWidth = ClientSize.Width - rightLeft - MarginX;
             if (rightWidth < 300) rightWidth = 300;
 
+            lblFiles.Left = rightLeft;
+            lblFiles.Width = rightWidth;
+            
             lvFiles.Left = rightLeft;
             lvFiles.Width = rightWidth;
 
@@ -260,6 +291,20 @@ namespace UnblockFilePreview
             if (logTop < lvTop + 220) logTop = lvTop + 220;
 
             lvFiles.Height = Math.Max(260, logTop - spacing - lvTop);
+
+            // Adjust extension list height so bottom of "Unblock selected" button aligns with bottom of right panel
+            // Bottom of btnUnblockSelected = clbTop + clbHeight + 12 + 88 + 34 = clbTop + clbHeight + 134
+            // Bottom of lvFiles = lvTop + lvHeight = clbTop + lvHeight (since lvTop = clbTop)
+            // For alignment: clbHeight + 134 = lvHeight, so clbHeight = lvHeight - 134
+            int desiredClbHeight = lvFiles.Height - 134;
+            int minClbHeight = 200; // minimum reasonable height for the extension list
+            clbExts.Height = Math.Max(minClbHeight, desiredClbHeight);
+            
+            // Update button positions based on new clbExts height
+            int btnTop = clbExts.Top + clbExts.Height + 12;
+            btnScan.Top = btnTop;
+            btnDryRun.Top = btnTop + 44;
+            btnUnblockSelected.Top = btnTop + 88;
 
             txtLog.Left = MarginX;
             txtLog.Width = ClientSize.Width - 2 * MarginX;
@@ -415,6 +460,7 @@ namespace UnblockFilePreview
             }
 
             btnScan.Enabled = false;
+            btnDryRun.Enabled = false;
             btnUnblockSelected.Enabled = false;
             btnSelectFolder.Enabled = false;
 
@@ -515,18 +561,16 @@ $items | ConvertTo-Json -Compress
                 return;
             }
 
-            if (!chkDryRun.Checked)
-            {
-                var res = MessageBox.Show(
-                    "This will remove 'downloaded from the Internet' mark (Mark of the Web) for the selected files.\n\nProceed only if you trust the source.",
-                    "Confirm unblock",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning);
+            var res = MessageBox.Show(
+                "This will remove 'downloaded from the Internet' mark (Mark of the Web) for the selected files.\n\nProceed only if you trust the source.",
+                "Confirm unblock",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
 
-                if (res != DialogResult.Yes) return;
-            }
+            if (res != DialogResult.Yes) return;
 
             btnUnblockSelected.Enabled = false;
+            btnDryRun.Enabled = false;
             btnScan.Enabled = false;
             btnSelectFolder.Enabled = false;
 
@@ -534,9 +578,9 @@ $items | ConvertTo-Json -Compress
                            .Select(i => (string)i.Tag!)
                            .ToArray();
 
-            Log($"{(chkDryRun.Checked ? "Dry run" : "Unblocking")} {paths.Length} file(s) ...");
+            Log($"Unblocking {paths.Length} file(s) ...");
 
-            string whatIf = chkDryRun.Checked ? " -WhatIf" : "";
+            string whatIf = "";
             string psPaths = "@(" + string.Join(",", paths.Select(p => "'" + PsSingleQuote(p) + "'")) + ")";
 
             string ps = $@"
@@ -562,20 +606,71 @@ foreach ($p in $paths) {{
             }
             else
             {
-                if (chkDryRun.Checked)
-                {
-                    Log("Dry run complete (no changes made).");
-                }
-                else
-                {
-                    Log("Unblock complete. Refreshing list ...");
-                    await ScanAsync();
-                }
+                Log("Unblock complete. Refreshing list ...");
+                await ScanAsync();
             }
 
             btnScan.Enabled = true;
             btnSelectFolder.Enabled = true;
-            btnUnblockSelected.Enabled = lvFiles.CheckedItems.Count > 0;
+            bool hasSelection = lvFiles.CheckedItems.Count > 0;
+            btnDryRun.Enabled = hasSelection;
+            btnUnblockSelected.Enabled = hasSelection;
+        }
+
+        private async System.Threading.Tasks.Task DryRunSelectedAsync()
+        {
+            if (lvFiles.CheckedItems.Count == 0)
+            {
+                MessageBox.Show("Please select at least one file for dry run.", "No selection",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            btnDryRun.Enabled = false;
+            btnUnblockSelected.Enabled = false;
+            btnScan.Enabled = false;
+            btnSelectFolder.Enabled = false;
+
+            var paths = lvFiles.CheckedItems.Cast<ListViewItem>()
+                           .Select(i => (string)i.Tag!)
+                           .ToArray();
+
+            Log($"Dry run: {paths.Length} file(s) ...");
+
+            string whatIf = " -WhatIf";
+            string psPaths = "@(" + string.Join(",", paths.Select(p => "'" + PsSingleQuote(p) + "'")) + ")";
+
+            string ps = $@"
+$paths = {psPaths}
+foreach ($p in $paths) {{
+  try {{
+    Unblock-File -LiteralPath $p -ErrorAction Continue{whatIf}
+    Write-Output $p
+  }} catch {{
+    Write-Error ""Failed: $p -> $($_.Exception.Message)""
+  }}
+}}
+";
+
+            var (code, _, stderr) = await RunPowerShellAsync(ps);
+
+            if (!string.IsNullOrWhiteSpace(stderr))
+                Log("PS ERR: " + stderr.Trim());
+
+            if (code != 0)
+            {
+                Log($"Dry run step failed. Exit code: {code}");
+            }
+            else
+            {
+                Log("Dry run complete (no changes made).");
+            }
+
+            btnScan.Enabled = true;
+            btnSelectFolder.Enabled = true;
+            bool hasSelection = lvFiles.CheckedItems.Count > 0;
+            btnDryRun.Enabled = hasSelection;
+            btnUnblockSelected.Enabled = hasSelection;
         }
 
         // ---------------- Helpers ----------------

@@ -67,7 +67,7 @@ This software currently only supports Windows OS.
 
 2. **Configure options**:
    - **Recurse subfolders**: Check this to scan files in subdirectories as well
-   - **Include Office docs**: Check this to include Microsoft Office files (.docx, .xlsx, .pptx) in the scan
+   - **Include Office docs**: Check this to include Microsoft Office files (.doc/.docx, .xls/.xlsx, .ppt/.pptx, etc.) in the scan
    - **File types**: Select which file extensions to scan for (default includes PDFs, images, and text files)
 
 3. **Scan for blocked files**: Click "Scan" to find files that are blocked from preview. The results will appear in the file list.
@@ -81,9 +81,9 @@ This software currently only supports Windows OS.
    - Click "Unblock Selected" to remove the "Mark of the Web" flag from the selected files
    - The log area will show the results of the operation
    
-   >Note: you may need to reopen Windows Explorer window to see the effects
+   > **Safety note:** Only unblock files from sources you trust! This utility removes Windows security warnings, so use it responsibly.
 
-> **Safety note:** Only unblock files from sources you trust! This utility removes Windows security warnings, so use it responsibly.
+> Note: after unblock, you may need to reopen Windows Explorer window to see the effects
 
 ## Project Details
 
