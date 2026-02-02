@@ -38,7 +38,7 @@ This software currently only supports Windows OS.
 **Building:**
 
 1. Clone or download this repository
-2. Open a terminal in the project directory
+2. Open a Windows PowerShell terminal in the project directory
 3. Restore dependencies and build:
    ```bash
    dotnet restore
