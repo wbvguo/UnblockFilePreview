@@ -1,4 +1,4 @@
-# UnblockFilePreview <a href="https://github.com/wbvguo/UnblockFilePreview/"><img src="img/UnblockFilePreview.png" align="right" height="138" alt="Rtoolset website" /></a>
+# UnblockFilePreview <a href="https://github.com/wbvguo/UnblockFilePreview/"><img src="img/UnblockFilePreview_wo_bkgd.png" align="right" height="138" alt="UnblockFilePreview" /></a>
 
 
 When previewing files downloaded from the internet, you may see this warning:
